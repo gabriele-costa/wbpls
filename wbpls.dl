@@ -32,6 +32,7 @@ IdC("Hello").
 IdN("alice").
 IdN("bob").
 IdN("eve").
+// should be an input
 
 .decl IdS(s : symbol)
 IdS(x) :- (IdV(x) ; IdC(x) ; IdN(x)).
@@ -176,7 +177,7 @@ EqT(t1+1, t2+1) :- EqT(t1, t2), t1 < 1000.          // Time limit for traces
 
 .type Event = Send {a : AgentName, m : Packet}
             | Recv {a : AgentName, m : Payload}
-            | Epsilon {}
+            | Epsilon {}    // eliminare
 
 .decl EqEv(e1 : Event, e2 : Event)
 EqEv($Send(a1, m1), $Send(a2, m2)) :- EqS(a1, a2), EqPk(m1, m2).
