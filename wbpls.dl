@@ -1,0 +1,365 @@
+#define msg(a) Eq(a, a)
+#define pld(p) EqPl(p, p)
+#define pak(p) EqPk(p, p)
+#define sym(s) EqS(s, s)
+#define bit(b) EqB(b, b)
+#define btm(b) EqBM(b, b)
+#define env(e) EqE(e, e)
+#define act(a) EqAA(a, a)
+#define prc(p) EqPr(p, p)
+#define agt(a) EqAg(a, a)
+#define evt(e) EqEv(e, e)
+#define trc(s) EqTr(s, s)
+#define eth(e) EqEt(e, e)
+#define cfg(c) EqCf(c, c)
+#define kwn(k) EqKS(k, k)
+#define pos(p) EqPos(p, p)
+#define tim(t) EqT(t, t)
+#define prt(p) EqPa(p, p)
+#define timAB(t) EqT(t, 10) // constant
+
+.decl IdV(s : symbol)
+IdV("x").
+IdV("y").
+IdV("z").
+// should be an input
+
+.decl IdC(s : symbol)
+IdC("Hello").
+// should be an input
+
+.decl IdN(s : symbol)
+IdN("alice").
+IdN("bob").
+IdN("eve").
+
+.decl IdS(s : symbol)
+IdS(x) :- (IdV(x) ; IdC(x) ; IdN(x)).
+
+.type Key <: symbol
+
+.decl IsK(k : Key)
+IsK("k1").
+IsK("k2").
+
+.decl EqS(s1 : symbol, s2 : symbol) eqrel
+EqS(x, x) :- IdS(x).
+
+.decl EqK(k1 : Key, k2 : Key) eqrel
+EqK(x, x) :- IsK(x).
+
+.type Bit = One {} | Zero {}
+
+.decl EqB(b1 : Bit, b2 : Bit) eqrel
+EqB($Zero(), $Zero()).
+EqB($One(), $One()).
+
+.type BitMask8 = [b0 : Bit, b1 : Bit, b2 : Bit, b3 : Bit, b4 : Bit, b5 : Bit, b6 : Bit, b7 : Bit]
+
+.decl IsBM(bm : BitMask8)
+IsBM([$One(),$Zero(),$Zero(),$Zero(),$Zero(),$Zero(),$Zero(),$Zero()]).
+IsBM([$One(),$One(),$Zero(),$Zero(),$Zero(),$Zero(),$Zero(),$Zero()]).
+
+.decl EqBM(bm1 : BitMask8, bm2 : BitMask8) eqrel
+EqBM(bm, bm) :- IsBM(bm).
+
+// b1 <= b2
+.decl LEqB(b1 : Bit, b2 : Bit)
+LEqB($Zero(), b) :- bit(b).
+LEqB(b, $One()) :- bit(b).
+
+.decl LEqBM(bm1 : BitMask8, bm2 : BitMask8) eqrel
+LEqBM(b1, b2) :- btm(b1), btm(b2), b1 = [b10, b11, b12, b13, b14, b15, b16, b17], b2 = [b20, b21, b22, b23, b24, b25, b26, b27], LEqB(b10, b20), LEqB(b11, b21), LEqB(b12, b22), LEqB(b13, b23), LEqB(b14, b24), LEqB(b15, b25), LEqB(b16, b26), LEqB(b17, b27).
+
+// b3 = b1 \cap b2
+.decl MinB(b1 : Bit, b2 : Bit, b3 : Bit)
+MinB(b1, b2, b3) :- LEqB(b1, b2), EqB(b1, b3).
+MinB(b1, b2, b3) :- LEqB(b2, b1), EqB(b2, b3).
+
+// b3 = b1 \cup b2
+.decl MaxB(b1 : Bit, b2 : Bit, b3 : Bit)
+MaxB(b1, b2, b3) :- LEqB(b1, b2), EqB(b2, b3).
+MaxB(b1, b2, b3) :- LEqB(b2, b1), EqB(b1, b3).
+
+.decl MinBM(bm1 : BitMask8, bm2 : BitMask8, bm3 : BitMask8)
+MinBM([b10, b11, b12, b13, b14, b15, b16, b17], [b20, b21, b22, b23, b24, b25, b26, b27], [b30, b31, b32, b33, b34, b35, b36, b37]) :- MinB(b10, b20, b30), MinB(b11, b21, b31), MinB(b12, b22, b32), MinB(b13, b23, b33), MinB(b14, b24, b34), MinB(b15, b25, b35), MinB(b16, b26, b36), MinB(b17, b27, b37).
+
+.decl MaxBM(bm1 : BitMask8, bm2 : BitMask8, bm3 : BitMask8)
+MaxBM([b10, b11, b12, b13, b14, b15, b16, b17], [b20, b21, b22, b23, b24, b25, b26, b27], [b30, b31, b32, b33, b34, b35, b36, b37]) :- MaxB(b10, b20, b30), MaxB(b11, b21, b31), MaxB(b12, b22, b32), MaxB(b13, b23, b33), MaxB(b14, b24, b34), MaxB(b15, b25, b35), MaxB(b16, b26, b36), MaxB(b17, b27, b37).
+
+// Message syntax
+.type Payload = Cleartext {m : symbol}
+              | Hash {m : Payload}
+              | Ciphertext {m : Payload, k : Key}
+              | Bits {b : BitMask8}
+              | Key {k : Key}
+
+.type Packet = Wat {p : Payload, n : BitMask8}
+
+.type Message = Jam {p : Packet, n : BitMask8}
+
+.decl EqPl(p1 : Payload, p2 : Payload) eqrel
+EqPl($Cleartext(c1), $Cleartext(c2)) :- EqS(c1, c2).
+EqPl($Hash(m11), $Hash(m12)) :- EqPl(m11, m12).
+EqPl($Ciphertext(m1m, m1k), $Ciphertext(m2m, m2k)) :- EqPl(m1m, m2m), EqK(m1k, m2k).
+EqPl($Bits(bm1), $Bits(bm2)) :- EqBM(bm1, bm2).
+EqPl($Key(k1), $Key(k2)) :- EqK(k1, k2).
+.limitsize EqPl(n=5)
+
+.decl EqPk(p1 : Packet, p2 : Packet) eqrel
+EqPk($Wat(m1m, m1n), $Wat(m2m, m2n)) :- EqPl(m1m, m2m), EqBM(m1n, m2n).
+
+.decl Eq(m1 : Message, m2 : Message) eqrel
+Eq($Jam(m1m, m1n), $Jam(m2m, m2n)) :- EqPk(m1m, m2m), EqBM(m1n, m2n).
+
+// Protocol agents
+.type AgentName = symbol
+
+.type Bind = [var : symbol, val : Payload]
+
+.type Env = [head : Bind, tail : Env]
+
+.decl EqE(e1 : Env, e2 : Env) eqrel
+EqE(nil, nil).
+EqE([[x1, m1], e1], [[x2, m2], e2]) :- EqS(x1, x2), EqPl(m1, m2), EqE(e1, e2).
+.limitsize EqE(n=20)
+
+.decl ApplyEnv(x : symbol, m : Payload, e : Env)
+ApplyEnv(x, m1, [[y, m2], e]) :- IdV(x), IdV(y), env(e), EqS(x, y), EqPl(m1, m2).
+ApplyEnv(x, m1, [[y, m2], e]) :- IdV(y), pld(m2), sym(y), ApplyEnv(x, m1, e), !EqS(x, y).
+.limitsize ApplyEnv(n=20)
+
+.type AgentAction = ASendM {m : Packet}
+                  | ASendV {x : symbol, bm : BitMask8}
+                  | ARecv {x : symbol}
+                  | AJam {n : BitMask8}       // NOTE: can only jam with constant masks
+
+.decl EqAA(a1 : AgentAction, a2 : AgentAction) eqrel
+EqAA($ASendM(m1), $ASendM(m2)) :- EqPk(m1, m2).
+EqAA($ASendV(x, b1), $ASendV(y, b2)) :- EqS(x, y), EqBM(b1, b2).
+EqAA($ARecv(x), $ARecv(y)) :- EqS(x, y).
+EqAA($AJam(n1), $AJam(n2)) :- EqBM(n1, n2).
+
+.type AgentProcess = Prefix {a : AgentAction, proc : AgentProcess}             // a.P
+                   | Choice {left : AgentProcess, right : AgentProcess}        // P + Q
+                   | CheckEqM {x : symbol, m : Message, proc : AgentProcess}   // [x = m]P
+                   | CheckEqV {x : symbol, y : symbol, proc : AgentProcess}    // [x = y]P
+                   | Jammin {n : BitMask8, proc : AgentProcess}                // jam(n).P
+                   | Nil {}                                                    // nil
+
+.decl EqPr(p : AgentProcess, q : AgentProcess) eqrel
+EqPr($Nil(), $Nil()).
+EqPr($Prefix(ap, pp), $Prefix(aq, qq)) :- EqAA(ap, aq), EqPr(pp,qq).
+EqPr($Choice(pl, pr), $Choice(ql, qr)) :- EqPr(pl, ql), EqPr(pr,qr).
+EqPr($Choice(pl, pr), $Choice(ql, qr)) :- EqPr($Choice(pl, pr), $Choice(qr, ql)).
+EqPr($CheckEqM(xp, mp, pp), $CheckEqM(xq, mq, qq)) :- EqS(xp, xq), Eq(mp, mq), EqPr(pp, qq).
+EqPr($CheckEqV(xp, yp, pp), $CheckEqV(xq, yq, qq)) :- EqS(xp, xq), EqS(yp, yq), EqPr(pp, qq).
+EqPr($Jammin(np, pp), $Jammin(nq, qq)) :- EqBM(np, nq), EqPr(pp, qq).
+.limitsize EqPr(n=5)
+
+.type Agent = [name : AgentName, process : AgentProcess, env : Env]
+
+.decl EqAg(alice : Agent, bob : Agent) eqrel
+EqAg([na, pa, ea], [nb, pb, eb]) :- EqS(na, nb), EqPr(pa, pb), EqE(ea, eb).
+
+.type Parties = [alice : Agent, bob : Agent]                                // Just Alice and Bob for now
+
+.decl EqPa(a : Parties, b : Parties) eqrel
+EqPa([a1, b1], [a2, b2]) :- EqAg(a1, a2), EqAg(b1, b2).
+
+// Trace and events
+.type Time <: unsigned
+
+.decl EqT(t1 : Time, t2 : Time) eqrel
+EqT(0, 0).
+EqT(t1+1, t2+1) :- EqT(t1, t2), t1 < 1000.          // Time limit for traces
+
+.type Event = Send {a : AgentName, m : Packet}
+            | Recv {a : AgentName, m : Payload}
+            | Epsilon {}
+
+.decl EqEv(e1 : Event, e2 : Event) eqrel
+EqEv($Send(a1, m1), $Send(a2, m2)) :- EqS(a1, a2), EqPk(m1, m2).
+EqEv($Recv(a1, m1), $Recv(a2, m2)) :- EqS(a1, a2), EqPl(m1, m2).
+EqEv($Epsilon(), $Epsilon()).
+
+.type TraceEvent = [ timestamp : Time, event : Event]
+
+.type Trace = [head : TraceEvent, tail : Trace]
+
+.decl EqTr(sigma1 : Trace, sigma2 : Trace) eqrel
+EqTr([[t1, e1], s1s], [[t2, e2], s2s]) :- EqT(t1, t2), EqEv(e1, e2), EqTr(s1s, s2s).
+
+.decl MaxTime(s : Trace, t : Time)
+MaxTime(nil, 0).
+MaxTime([[tt, e], s2], t) :- evt(e), trc(s2), EqT(t, tt).
+
+.decl Transmitting(s : Trace, m : Packet, t : Time)
+Transmitting([[t, $Send(a, m)], s], m1, t1) :- tim(t), tim(t1), trc(s), sym(a), EqPk(m, m1), t1 > t, t1 < t + 10.
+Transmitting([[t, $Send(a, m)], s], m1, t1) :- tim(t), pak(m), sym(a), Transmitting(s, m1, t1).
+
+// Channel state
+.type JBind = [agent : AgentName, mask : BitMask8]
+
+.type Ether = [head : JBind, tail : Ether]
+
+.decl EqEt(ether1 : Ether, ether2 : Ether) eqrel
+EqEt(nil, nil).
+EqEt([[a1, n1], e1e], [[a2, n2], e2e]) :- EqBM(n1, n2), EqS(a1, a2), EqEt(e1e, e2e).
+.limitsize EqEt(n=20)
+
+.decl ApplyEth(a : AgentName, mask : BitMask8, e : Ether)
+ApplyEth(a, [$Zero(),$Zero(),$Zero(),$Zero(),$Zero(),$Zero(),$Zero(),$Zero()], nil) :- sym(a).
+ApplyEth(a, bm, [[a, bm], eth]) :- IdN(a), btm(bm), eth(eth).
+ApplyEth(a, bm, [[a1, bm1], eth]) :- !EqS(a,a1), IdN(a1), btm(bm1), ApplyEth(a, bm, eth).
+.limitsize ApplyEth(n=20)
+
+.decl InRange(a : AgentName, b : AgentName)
+InRange("alice", "alice").
+InRange("bob", "bob").
+InRange("alice", "bob").
+InRange("bob", "alice").
+// should be an input
+
+.decl EthJamFor(p : Packet, m : Message, e : Ether, r : AgentName)
+EthJamFor(p, $Jam(p, bm), e, a) :- pak(p), InRange(b, a), InRange(c, a), !EqS(b, c), ApplyEth(b, bm1, e), ApplyEth(c, bm2, e), MaxBM(bm1, bm2, bm).
+
+.type Configuration = [sigma : Trace, agents : Parties, ether : Ether]
+
+.decl EqCf(conf1 : Configuration, conf2 : Configuration) eqrel
+EqCf([s1, [a1, b1], e1], [s2, [a2, b2], e2]) :- EqTr(s1, s2), EqAg(a1, a2), EqAg(b1, b2), EqEt(e1, e2).
+
+// Transition Rules
+.decl Trans(c1 : Configuration, c2 : Configuration)
+// Jam Alice
+Trans([sigma1, [[nalice1, $Jammin(n1, proc1), envalice1], bob1], ether1], [sigma2, [[nalice2, proc2, envalice2], bob2], ether2])
+:-
+  EqTr(sigma1, sigma2), EqAg([nalice1, proc1, envalice1], [nalice2, proc2, envalice2]), EqAg(bob1, bob2), EqEt(ether2, [[nalice2, n2], ether1]), EqBM(n1, n2).
+
+// SendM Alice
+Trans([sigma1, [[nalice, $Prefix($ASendM(m), proc), envalice], bob1], ether1], [[[ts,$Send(nalice,m)], sigma1], [[nalice, proc, envalice], bob1], ether1])
+:-
+  IdN(nalice), pak(m), prc(proc), env(envalice), eth(ether1), agt(bob1), tim(ts), MaxTime(sigma1, t), ts = t + 2.
+
+// SendV Alice
+Trans([sigma1, [[nalice, $Prefix($ASendV(x, bm), proc), envalice], bob1], ether1], [[[ts,$Send(nalice,$Wat(m, bm))], sigma1], [[nalice, proc, envalice], bob1], ether1])
+:-
+  trc(sigma1), sym(nalice), prc(proc), btm(bm), env(envalice), eth(ether1), agt(bob1), tim(ts), ApplyEnv(x, m, envalice), MaxTime(sigma1, t), ts = t + 2.
+
+// Choice1 Alice
+Trans([sigma1, [[nalice, $Choice(procl, procr), envalice], bob1], ether1], [sigma1, [[nalice, procl, envalice], bob1], ether1])
+:-
+  trc(sigma1), sym(nalice), prc(procl), prc(procr), env(envalice), eth(ether1), agt(bob1).
+
+// Choice2 Alice
+Trans([sigma1, [[nalice, $Choice(procl, procr), envalice], bob1], ether1], [sigma1, [[nalice, procr, envalice], bob1], ether1])
+:-
+  trc(sigma1), sym(nalice), prc(procl), prc(procr), env(envalice), eth(ether1), agt(bob1).
+
+// Recv Alice
+Trans([sigma1, [[nalice, $Prefix($ARecv(x), proc), envalice], bob1], ether1], [[[ts, $Recv(nalice,pay)], sigma1], [[nalice, proc, [[x, pay], envalice]], bob1], ether1])
+:-
+  sym(nalice), prc(proc), pld(pay), sym(x), env(envalice), eth(ether1), agt(bob1), tim(ts), Transmitting(sigma1, $Wat(pay, bm1), ts), EthJamFor($Wat(pay, bm1), $Jam($Wat(pay, bm1), bm2), ether1, nalice), LEqBM(bm2, bm1), MaxTime(sigma1, t), ts = t + 2.
+/*
+
+/*
+Trans(c1, c2) :- cfg(c1), cfg(c2), c1 = [sigma1, parties1, ether1],
+                 parties1 = [alice, bob],
+                 alice = [nalice, palice, envalice],
+                 palice = $Prefix($ARecv(x), proc),
+                 alice2 = [nalice, proc, envalice2],
+                 trc(sigma1), eth(ether1), agt(alice), agt(bob),
+                 EqE(envalice2, [[x, m], envalice]),
+                 c2 = [sigma12, [alice22, bob], ether1],
+                 LastEvent(sigma1, e, ts), tim(ts), EqEv(e, $Send(b,m)), tim(tr), tr < ts + tc, timAB(tc), b != nalice,
+                 msg(m), // WRONG
+                 EqTr([[ts,$Recv(nalice,m)], sigma1], sigma12), EqAg(alice2, alice22).
+*/
+
+.decl InKS(m : Payload)
+.input InKS
+
+// Knowledge Rules
+.decl Knows(m : Payload)
+Knows(m) :- InKS(m). // (Init)
+Knows($Hash(m1)) :- Knows(m1). // (Hash)
+Knows($Ciphertext(m1, key)) :- Knows(m1), Knows($Key(key)). // (Enc)
+Knows(m) :- Knows($Ciphertext(m, key)), Knows($Key(key)). // (Dec)
+
+/* ESEMPI */
+
+.decl Initial(c : Configuration)
+Initial([nil,[["alice", $Prefix($ASendM($Wat($Cleartext("alice"), [$One(),$Zero(),$Zero(),$Zero(),$Zero(),$Zero(),$Zero(),$Zero()])), $Nil()), nil],["bob", $Nil(), nil]],nil]).
+.output Initial
+
+
+.decl Final(c : Configuration)
+Final(cf) :- Initial(ci), Trans(ci, cf), cfg(cf).
+.output Final
+.limitsize Final(n=1)
+
+.decl Debug1(nalice : AgentName)
+Debug1("alice") :- IdN("alice").
+.output Debug1
+
+.decl Debug2(m : Packet)
+Debug2($Wat($Cleartext("alice"), [$One(),$Zero(),$Zero(),$Zero(),$Zero(),$Zero(),$Zero(),$Zero()])) :- pak($Wat($Cleartext("alice"), [$One(),$Zero(),$Zero(),$Zero(),$Zero(),$Zero(),$Zero(),$Zero()])).
+.output Debug2
+
+.decl Debug3(proc : AgentProcess)
+Debug3($Nil()) :- prc($Nil()).
+.output Debug3
+
+.decl Debug4(envalice : Env)
+Debug4(nil) :- env(nil).
+.output Debug4
+
+.decl Debug5(ether1 : Ether)
+Debug5(nil) :- eth(nil).
+.output Debug5
+
+.decl Debug6(bob : Agent)
+Debug6(bob) :- agt(bob).
+.output Debug6
+
+.decl Debug7(sigma1 : Trace, ts : Time)
+Debug7(nil, ts) :- tim(ts), MaxTime(nil, t), ts = t + 2.
+.output Debug7
+
+/*
+// INITIAL KNOWLEDGE
+InKS($Cleartext("hello")).
+InKS($Bits([$One(),$Zero(),$Zero(),$Zero(),$Zero(),$Zero(),$Zero(),$Zero()])).
+
+.decl Initial(c : Configuration)
+Initial([nil,[["alice", $Jammin([$One(),$Zero(),$Zero(),$Zero(),$Zero(),$Zero(),$Zero(),$Zero()], $Prefix($ASendM($Cleartext("Hello, World!")), $Nil())), nil],["bob", $Nil(), nil]],nil]).
+// can be an input
+.output Initial
+
+.decl TransStar(c1 : Configuration, c2 : Configuration)
+TransStar(c, c) :- cfg(c).
+TransStar(c1, c2) :- TransStar(c1, c0), Trans(c0, c2).
+.output TransStar
+.limitsize TransStar(n=100)
+
+.decl tinit(x : number)
+tinit(3).
+
+.decl EqNum(x : number, y : number) eqrel
+EqNum(0, 0).
+EqNum(x+1, y+1) :- EqNum(x, y).
+.limitsize EqNum(n=200)
+
+.decl ttrans(x : number, y : number)
+ttrans(0, 4).
+ttrans(x, x+4) :- EqNum(x, x), x > 7.
+ttrans(x, x+9) :- EqNum(x, x), x < 5.
+.output ttrans
+.limitsize ttrans(n=100)
+
+.decl strans(x : number, y : number)
+strans(x, x) :- tinit(x).
+strans(x, y) :- strans(x, z), ttrans(z, y).
+.output strans
+.limitsize strans(n=100)
+/* */
