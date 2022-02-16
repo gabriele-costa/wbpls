@@ -74,8 +74,8 @@ LEqBM(b1, b2) :- btm(b1), btm(b2), b1 = [b10, b11, b12, b13, b14, b15, b16, b17]
 
 // b3 = b1 \cap b2
 .decl MinB(b1 : Bit, b2 : Bit, b3 : Bit)
-MinB(b1, b2, b3) :- LEqB(b1, b2), EqB(b1, b3).
-MinB(b1, b2, b3) :- LEqB(b2, b1), EqB(b2, b3).
+MinB(b1, b2, b1) :- LEqB(b1, b2).
+MinB(b1, b2, b2) :- LEqB(b2, b1).
 
 // b3 = b1 \cup b2
 .decl MaxB(b1 : Bit, b2 : Bit, b3 : Bit)
@@ -188,9 +188,15 @@ EqEv($Epsilon(), $Epsilon()).
 
 .type Trace = [head : TraceEvent, tail : Trace]
 
+.decl TrSize(sigma1 : Trace, n : unsigned)
+TrSize(nil, 0).
+TrSize([[t, e], sigma2], n+1) :- tim(t), evt(e), TrSize(sigma2, n), t < 10.
+.limitsize TrSize(n=3)
+.output TrSize
+
 .decl EqTr(sigma1 : Trace, sigma2 : Trace)
 EqTr(nil, nil).
-EqTr([[t1, e1], s1s], [[t2, e2], s2s]) :- EqT(t1, t2), EqEv(e1, e2), EqTr(s1s, s2s).
+EqTr([[t1, e1], s1s], [[t2, e2], s2s]) :- EqT(t1, t2), EqEv(e1, e2), EqTr(s1s, s2s), TrSize(s1s, n), n < 10.
 
 .decl MaxTime(s : Trace, t : Time)
 MaxTime(nil, 0).
