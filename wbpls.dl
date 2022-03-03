@@ -69,7 +69,7 @@ EqBM(bm, bm) :- IsBM(bm).
 LEqB($Zero(), b) :- bit(b).
 LEqB(b, $One()) :- bit(b).
 
-.decl LEqBM(bm1 : BitMask8, bm2 : BitMask8) eqrel
+.decl LEqBM(bm1 : BitMask8, bm2 : BitMask8)
 LEqBM(b1, b2) :- btm(b1), btm(b2), b1 = [b10, b11, b12, b13, b14, b15, b16, b17], b2 = [b20, b21, b22, b23, b24, b25, b26, b27], LEqB(b10, b20), LEqB(b11, b21), LEqB(b12, b22), LEqB(b13, b23), LEqB(b14, b24), LEqB(b15, b25), LEqB(b16, b26), LEqB(b17, b27).
 
 // b3 = b1 \cap b2
@@ -177,12 +177,10 @@ EqT(t1+1, t2+1) :- EqT(t1, t2), t1 < 1000.          // Time limit for traces
 
 .type Event = Send {a : AgentName, m : Packet}
             | Recv {a : AgentName, m : Payload}
-            | Epsilon {}    // eliminare
 
 .decl EqEv(e1 : Event, e2 : Event)
 EqEv($Send(a1, m1), $Send(a2, m2)) :- EqS(a1, a2), EqPk(m1, m2).
 EqEv($Recv(a1, m1), $Recv(a2, m2)) :- EqS(a1, a2), EqPl(m1, m2).
-EqEv($Epsilon(), $Epsilon()).
 
 .type TraceEvent = [ timestamp : Time, event : Event]
 
