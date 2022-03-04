@@ -3,35 +3,20 @@ free c : channel.
 type bitset.
 type mask.
 
+
+
+(* se p <= q restituisce q, altrimenti fallisce *)
+pred leq(mask, mask).
+clauses forall m1:mask; leq(m1, m1);
+        forall m1:mask, m2:mask, m3:mask; leq(m1, m2) && leq(m1, m3) -> leq(m1, m3).
+
 fun wat(bitstring, mask) : bitstring.
 equation forall m:bitstring, n:mask; wat(m, n) = m.
 
-type Bool.
 
 
-fun beval(Bool) : bool.
-reduc forall b : bool; mk_bool(b) = b.
-
-fun mk_mask(bool, bool, bool, bool, bool, bool, bool, bool) : mask.
-
-fun bleq(bool, bool) : bool
-reduc forall b : bool; bleq(false, b) = true
-otherwise forall b : bool; bleq(b, true) = true
-otherwise forall b1 : bool, b2 : bool; bleq(b1, b2) = false.
-
-fun mleq(mask, mask) : Bool.
-equation forall b1:bool, b2:bool, b3:bool, b4:bool, b5:bool, b6:bool, b7:bool, b8:bool, b11:bool, b12:bool, b13:bool, b14:bool, b15:bool, b16:bool, b17:bool, b18:bool; mleq(mk_mask(b1, b2, b3, b4, b5, b6, b7, b8), mk_mask(b11, b12, b13, b14, b15, b16, b17, b18)) = mk_bool(true).
-
-
-
-(* se p <= q restituisce q, altrimenti fallisce
-fun leq(mask, mask, bool) : mask
-reduc forall n:bitset, i:nat, j:nat; leq(mk_mask(n,i),mk_mask(n,j), ileq(i,j)) = mk_mask(n,j).
- *)
-
-
-fun jam(bitstring, mask) : bitstring.
-reduc forall m:bitstring, p:mask, q:mask; djam(jam(wat(m,p),q),mleq(q,p)) = m.
+fun jam(bitstring, bool) : bitstring.
+reduc forall m:bitstring, p:mask, q:mask; djam(jam(wat(m,p),q),leq(q,p)) = m.
 (* reduc forall m:bitstring, n:bitset; djam(jam(m, mk_mask(n,0))) = m. *)
 
 
