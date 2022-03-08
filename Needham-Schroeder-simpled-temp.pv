@@ -3,6 +3,22 @@ free c : channel.
 type bitset.
 type mask.
 
+
+pred leq(mask, mask).
+clauses forall m1:mask; leq(m1, m1);
+        forall m1:mask, m2:mask, m3:mask; leq(m1, m2) && leq(m2, m3) -> leq(m1, m3).
+
+
+
+        pred leq(mask, mask).
+        clauses forall m:bitset, j:nat; leq(mk_mask(m,0), mk_mask(m,j));
+                forall m:bitset, i:nat, j:nat; leq(mk_mask(m,i+1),mk_mask(m,j+1)) <-> leq(mk_mask(m,i),mk_mask(m,j)).
+
+
+
+
+
+
 fun wat(bitstring, mask) : bitstring.
 equation forall m:bitstring, n:mask; wat(m, n) = m.
 
