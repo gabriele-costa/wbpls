@@ -1,8 +1,17 @@
+set traceDisplay = long.
+
 free c : channel.
-free dejam_chan : channel.
+free dejam_chan : channel [private].
+free jam_chan : channel [private].
+
+const alice : bitstring.
+const bob : bitstring.
+const eve : bitstring.
 
 type bitset.
 type mask.
+
+const null : bitset.
 
 fun mk_mask(bitset, nat) : mask.
 reduc forall b:bitset, i:nat; maskNat(mk_mask(b,i)) = i.
@@ -16,11 +25,10 @@ fun wat(bitstring, mask) : bitstring.
 reduc forall b:bitstring, m:mask; watMask(wat(b,m)) = m.
 reduc forall b:bitstring, m:mask; watBitstring(wat(b,m)) = b.
 
-
 fun jam(bitstring, mask) : bitstring.
-reduc forall b:bitstring, m:mask; jamMask(jam(b,m)) = m.
-reduc forall b:bitstring, m:mask; jamBitstring(jam(b,m)) = b.
-
+reduc forall b:bitstring, m:mask; jamMask(jam(b,m)) = m [private].
+reduc forall b:bitstring, m:mask; jamBitstring(jam(b,m)) = b [private].
+reduc forall b:bitstring, m:mask; jamAtkBitstring(jam(b,mk_mask(null, 0))) = b.
 
 (* dejammer *)
 let processDeJam() =
@@ -28,8 +36,19 @@ let processDeJam() =
   let q = jamMask(m) in
   let p = watMask(jamBitstring(m)) in
   let m1 = watBitstring(jamBitstring(m)) in
-  if leq(q, p) then out(dejam_chan, m1).
+    if leq(q, p) then out(dejam_chan, m1).
 
+pred inRangeAtk(bitstring).
+clauses forall a : bitstring; a = alice -> inRangeAtk(a);
+        forall a : bitstring; a = bob -> inRangeAtk(a).
+
+(* jammer *)
+let processJam() =
+  in(jam_chan, ((b: bitstring, m:mask), r : bitstring));
+  if inRangeAtk(r) then
+    out(c, jam(b, m))
+  else
+    out(c, jam(b, mk_mask(null, 0))).
 
 fun senc(bitstring, bitstring): bitstring.
 reduc forall x: bitstring, y: bitstring; sdec(senc(x, y), y)= x.
@@ -44,12 +63,12 @@ query attacker(secretANa);
 (*Alice*)
 let processA(NA : mask, NB : mask)=
 	new Na: bitstring;
-	out(c, jam(wat(Na, NA), NA));
+	out(jam_chan, ((wat(Na, NA), NA), bob));
 	in(c, m: bitstring);
   out(dejam_chan, m);
   in(dejam_chan, (Naa : bitstring, NX : bitstring));
   if Na = Naa then
-	out(c, jam(wat(NX, NA),NA));
+	out(jam_chan, ((wat(NX, NA),NA), bob));
 	out(c, senc(secretANa, Na));
 	out(c, senc(secretANb, NX)).
 
@@ -59,7 +78,7 @@ let processB(NA:mask, NB : mask)=
   out(dejam_chan, m);
   in(dejam_chan, NY : bitstring);
 	new Nb: bitstring;
-	out(c, jam(wat((NY,Nb), NB),NB));
+	out(jam_chan, ((wat((NY,Nb), NB),NB), alice));
 	in(c, m3: bitstring);
   out(dejam_chan, m3);
   in(dejam_chan, Nbb : bitstring);
@@ -71,4 +90,4 @@ let processB(NA:mask, NB : mask)=
 process
 	new NA: mask;
 	new NB: mask;
-	((!processA(NA, NB)) | (!processB(NA, NB)) | (!processDeJam()))
+	((!processA(NA, NB)) | (!processB(NA, NB)) | (!processJam()) | (!processDeJam()))
