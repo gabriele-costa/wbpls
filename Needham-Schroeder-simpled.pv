@@ -38,17 +38,19 @@ let processDeJam() =
   let m1 = watBitstring(jamBitstring(m)) in
     if leq(q, p) then out(dejam_chan, m1).
 
-pred inRangeAtk(bitstring).
+(* position *)
+(* pred inRangeAtk(bitstring).
 clauses forall a : bitstring; a = alice -> inRangeAtk(a);
         forall a : bitstring; a = bob -> inRangeAtk(a).
+*)
 
 (* jammer *)
 let processJam() =
   in(jam_chan, ((b: bitstring, m:mask), r : bitstring));
-  if inRangeAtk(r) then
-    out(c, jam(b, m))
-  else
-    out(c, jam(b, mk_mask(null, 0))).
+(*  if inRangeAtk(r) then *)
+    out(c, jam(b, m)).
+(*  else
+    out(c, jam(b, mk_mask(null, 0))). *)
 
 fun senc(bitstring, bitstring): bitstring.
 reduc forall x: bitstring, y: bitstring; sdec(senc(x, y), y)= x.
@@ -88,6 +90,6 @@ let processB(NA:mask, NB : mask)=
 
 (*Main*)
 process
-	new NA: mask;
+	(* new NA: mask; *)
 	new NB: mask;
-	((!processA(NA, NB)) | (!processB(NA, NB)) | (!processJam()) | (!processDeJam()))
+	((!processA(mk_mask(null, 0), NB)) | (!processB(mk_mask(null, 0), NB)) | (!processJam()) | (!processDeJam()))
