@@ -7,6 +7,7 @@ free jam_chan : channel [private].
 const alice : bitstring.
 const bob : bitstring.
 const eve : bitstring.
+const dummy : bitstring.
 
 type bitset.
 type mask.
@@ -41,15 +42,17 @@ let processDeJam() =
 (* position *)
 (* pred inRangeAtk(bitstring).
 clauses forall a : bitstring; a = alice -> inRangeAtk(a);
-        forall a : bitstring; a = bob -> inRangeAtk(a).
-*)
+        forall a : bitstring; a = bob -> inRangeAtk(a). *)
 
 (* jammer *)
 let processJam() =
   in(jam_chan, ((b: bitstring, m:mask), r : bitstring));
-(*  if inRangeAtk(r) then *)
-    out(c, jam(b, m)).
-(*  else
+ifdef('InRange','out(c, jam(b, m)).')
+ifndef('InRange','out(c, jam(b, mk_mask(null, 0))).')
+
+(* if inRangeAtk(r) then
+    out(c, jam(b, m))
+  else
     out(c, jam(b, mk_mask(null, 0))). *)
 
 fun senc(bitstring, bitstring): bitstring.
@@ -90,6 +93,6 @@ let processB(NA:mask, NB : mask)=
 
 (*Main*)
 process
-	(* new NA: mask; *)
+	new NA: mask;
 	new NB: mask;
-	((!processA(mk_mask(null, 0), NB)) | (!processB(mk_mask(null, 0), NB)) | (!processJam()) | (!processDeJam()))
+	((!processA(NA, NB)) | (!processB(NA, NB)) | (!processJam()) | (!processDeJam()))
