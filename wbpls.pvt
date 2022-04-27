@@ -1,0 +1,53 @@
+(* ProVerif therory for WBPLS *)
+
+free dejam_chan : channel [private].
+free jam_chan : channel [private].
+free c : channel.
+
+type bitset.
+type mask.
+
+const null : bitset.
+
+fun mk_mask(bitset, nat) : mask.
+reduc forall b:bitset, i:nat; maskNat(mk_mask(b,i)) = i.
+reduc forall b:bitset, i:nat; maskBitset(mk_mask(b,i)) = b.
+
+pred leq(mask, mask).
+clauses forall m1:mask, m2:mask; (maskBitset(m1) = maskBitset(m2)) && (maskNat(m1) = 0) -> leq(m1, m2);
+        forall m1:mask, m2:mask; leq(mk_mask(maskBitset(m1), maskNat(m1)-1), mk_mask(maskBitset(m2), maskNat(m2)-1)) -> leq(m1, m2).
+
+fun wat(bitstring, mask) : bitstring.
+reduc forall b:bitstring, m:mask; watMask(wat(b,m)) = m.
+reduc forall b:bitstring, m:mask; watBitstring(wat(b,m)) = b.
+
+fun jam(bitstring, mask) : bitstring.
+reduc forall b:bitstring, m:mask; jamMask(jam(b,m)) = m [private].
+reduc forall b:bitstring, m:mask; jamBitstring(jam(b,m)) = b [private].
+reduc forall b:bitstring, m:mask; jamAtkBitstring(jam(b,mk_mask(null, 0))) = b.
+
+(* dejammer *)
+let processDeJam() =
+  in(dejam_chan, m: bitstring);
+  let q = jamMask(m) in
+  let p = watMask(jamBitstring(m)) in
+  let m1 = watBitstring(jamBitstring(m)) in
+    if leq(q, p) then out(dejam_chan, m1).
+
+(* position *)
+(* pred inRangeAtk(bitstring).
+clauses forall a : bitstring; a = alice -> inRangeAtk(a);
+        forall a : bitstring; a = bob -> inRangeAtk(a). *)
+
+(* jammer *)
+let processJam() =
+  in(jam_chan, ((b: bitstring, m:mask), r : bitstring));
+ifdef(`InRange',`out(c, jam(b, m))',`out(c, jam(b, mk_mask(null, 0)))').
+
+(* if inRangeAtk(r) then
+    out(c, jam(b, m))
+  else
+    out(c, jam(b, mk_mask(null, 0))). *)
+
+fun senc(bitstring, bitstring): bitstring.
+reduc forall x: bitstring, y: bitstring; sdec(senc(x, y), y)= x.
