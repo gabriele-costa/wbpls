@@ -24,7 +24,7 @@ let processA(NA : mask, NB : mask)=
 	out(c, senc(secretANb, NX)).
 
 (*Bob*)
-let processB(NA:mask, NB : mask)=
+let processB(NA : mask, NB : mask)=
 	injam(m, NY : bitstring);
 	new Nb: bitstring;
 	outjam(((wat((NY,Nb), NB),NB), alice));
