@@ -1,7 +1,7 @@
 (* ProVerif therory for WBPLS *)
 
 define(`outjam', ``out(jam_chan, $1)'')
-define(`injam', ``in(c, $1 : bitstring); out(dejam_chan, $1); in(dejam_chan, $2)'')
+define(`injam', ``in(std_chan, $1 : bitstring); out(dejam_chan, $1); in(dejam_chan, $2)'')
 
 free dejam_chan : channel [private].
 free jam_chan : channel [private].

@@ -5,6 +5,7 @@ include(`wbpls.pvt')
 const alice : bitstring.
 const bob : bitstring.
 const eve : bitstring.
+free prop : channel.
 
 free secretANa, secretANb, secretBNa, secretBNb :bitstring [private].
 
@@ -20,8 +21,8 @@ let processA(NA : mask, NB : mask)=
 	injam(m, (Naa : bitstring, NX : bitstring));
   if Na = Naa then
 	outjam(((wat(NX, NA),NA), bob));
-	out(c, senc(secretANa, Na));
-	out(c, senc(secretANb, NX)).
+	out(prop, senc(secretANa, Na));
+	out(prop, senc(secretANb, NX)).
 
 (*Bob*)
 let processB(NA : mask, NB : mask)=
@@ -30,8 +31,8 @@ let processB(NA : mask, NB : mask)=
 	outjam(((wat((NY,Nb), NB),NB), alice));
 	injam(m3, Nbb : bitstring);
   if Nb = Nbb then
-	out(c, senc(secretBNa, NY));
-	out(c, senc(secretBNb, Nb)).
+	out(prop, senc(secretBNa, NY));
+	out(prop, senc(secretBNb, Nb)).
 
 (*Main*)
 process
