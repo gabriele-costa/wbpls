@@ -5,7 +5,7 @@ define(`injam', ``in(c, $1 : bitstring); out(dejam_chan, $1); in(dejam_chan, $2)
 
 free dejam_chan : channel [private].
 free jam_chan : channel [private].
-free c : channel.
+free std_chan : channel.
 
 type bitset.
 type mask.
@@ -45,12 +45,12 @@ clauses forall a : bitstring; a = alice -> inRangeAtk(a);
 (* jammer *)
 let processJam() =
   in(jam_chan, ((b: bitstring, m:mask), r : bitstring));
-ifdef(`InRange',`out(c, jam(b, m))',`out(c, jam(b, mk_mask(null, 0)))').
+ifdef(`InRange',`out(std_chan, jam(b, m))',`out(std_chan, jam(b, mk_mask(null, 0)))').
 
 (* if inRangeAtk(r) then
-    out(c, jam(b, m))
+    out(std_chan, jam(b, m))
   else
-    out(c, jam(b, mk_mask(null, 0))). *)
+    out(std_chan, jam(b, mk_mask(null, 0))). *)
 
 fun senc(bitstring, bitstring): bitstring.
 reduc forall x: bitstring, y: bitstring; sdec(senc(x, y), y)= x.
