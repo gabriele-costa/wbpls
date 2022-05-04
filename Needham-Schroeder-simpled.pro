@@ -38,4 +38,4 @@ let processB(NA : mask, NB : mask)=
 process
 	new NA: mask;
 	new NB: mask;
-	wbplsenv((!processA(NA, NB)), (!processB(NA, NB)))
+	wbplsenv((!processA(NA, NB)) | (!processB(NA, NB)))
