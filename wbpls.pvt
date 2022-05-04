@@ -2,6 +2,7 @@
 
 define(`outjam', ``out(jam_chan, $1)'')
 define(`injam', ``in(std_chan, $1 : bitstring); out(dejam_chan, $1); in(dejam_chan, $2)'')
+define(`wbplsenv', ``($1 | $2 | (!processJam()) | (!processDeJam()))'')
 
 free dejam_chan : channel [private].
 free jam_chan : channel [private].
