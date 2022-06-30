@@ -18,21 +18,19 @@ query x:bitstring;  event (EndnodeAccepted(x)) ==> event(EndnodeJoint(x)).
 (* End-node *)
 
 let endnode(NE: mask, NG: mask, appkey : bitstring) =
-  outjam(((wat((devui, appkey), NE), NE), gateway));
-  injam(m, (ans : bitstring));
-  if ans = ok then 
-    event EndnodeJoint(devui).
-
-(* gateway *)
-let gatewaynode(NE: mask, NG: mask) =
+  outjam(((wat((devui, appkey), NE), NE), gateway)).
+  
+(* edgenode *)
+let edgenode(NE: mask, NG: mask) =
   injam(m, (dui : bitstring, aui: bitstring));
   out(intc, (dui, aui));
   in(intc, ans : bitstring);
   if ans = ok then 
-    outjam(((wat(ok, NG), NG), enddevice)).
+    event EndnodeJoint(dui).
 
-(* edgenode *)
-let edgenode(appKey : bitstring) = 
+
+(* gateway *)
+let gatewaynode(appKey : bitstring) = 
   in(intc, (dui : bitstring, akey : bitstring));
   if akey = appKey then 
     event EndnodeAccepted(dui);
@@ -42,4 +40,4 @@ let edgenode(appKey : bitstring) =
 process
 	new NE: mask;
 	new NG: mask;
-	((!endnode(NE, NG, AppKey)) | (!gatewaynode(NE, NG)) | (!edgenode(AppKey)) | (!processJam()) | (!processDeJam()))
+	wbplsenv((!endnode(NE, NG, AppKey)) | (!edgenode(NE, NG)) | (!gatewaynode(AppKey))))
