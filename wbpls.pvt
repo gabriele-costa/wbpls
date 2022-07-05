@@ -1,4 +1,4 @@
-(* ProVerif therory for WBPLS *)
+(* ProVerif theory for WBPLS *)
 
 define(`outjam', ``out(jam_chan, $1)'')
 define(`injam', ``in(std_chan, $1 : bitstring); out(dejam_chan, $1); in(dejam_chan, $2)'')
