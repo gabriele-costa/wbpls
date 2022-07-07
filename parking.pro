@@ -40,4 +40,4 @@ let gatewaynode(appKey : bitstring) =
 process
 	new NE: mask;
 	new NG: mask;
-	wbplsenv((!endnode(NE, NG, AppKey)) | (!edgenode(NE, NG)) | (!gatewaynode(AppKey))))
+	wbplsenv((!endnode(NE, NG, AppKey)) | (!edgenode(NE, NG)) | (!gatewaynode(AppKey))) 
