@@ -3,7 +3,7 @@
 Watermarking-Based Physical-Level Security (WBPLS) is a model checking tool for the verification of security protocols using physical channel protection primitives called *watermarking* and *jamming*.
 
 This repository contains the ProVerif theory and the models of the protocols described in the paper 
-> [G. Costa, P. Degano, L. Galletta and S. Soderi. Formally verifying security protocols with watermarking and jamming](), Manuscript submitted for publication, 2022.
+> [G. Costa, P. Degano, L. Galletta and S. Soderi. Formally verifying security protocols built on watermarking and jamming](), Manuscript submitted for publication, 2022.
 
 # Requirement
 
